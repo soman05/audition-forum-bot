@@ -1,0 +1,5 @@
+bot.log
+run_bot.sh
+*.pyc
+__pycache__/
+audition-bot-env/
