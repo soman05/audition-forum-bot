@@ -1,0 +1,35 @@
+name: Automation Monitoring Duty Rotation
+
+on:
+  schedule:
+    # 8 AM UTC Mon-Fri. Adjust for your timezone:
+    #   8 AM PST  ->  '0 16 * * 1-5'
+    #   8 AM IST  ->  '30 2  * * 1-5'
+    #   8 AM CET  ->  '0 7  * * 1-5'
+    #   8 AM UTC  ->  '0 8  * * 1-5'
+    - cron: '0 8 * * 1-5'
+
+  workflow_dispatch:  # allows manual trigger from GitHub UI
+
+jobs:
+  duty-rotation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Post duty rotation to Slack
+        env:
+          SLACK_BOT_TOKEN:       ${{ secrets.SLACK_BOT_TOKEN }}
+          DUTY_SLACK_CHANNEL_ID: ${{ secrets.DUTY_SLACK_CHANNEL_ID }}
+        run: python duty_rotation.py

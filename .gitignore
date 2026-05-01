@@ -1,5 +1,6 @@
-bot.log
 run_bot.sh
+bot.log
 *.pyc
 __pycache__/
 audition-bot-env/
+.DS_Store
