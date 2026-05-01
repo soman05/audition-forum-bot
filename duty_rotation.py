@@ -58,7 +58,7 @@ SLACK_API_URL = "https://slack.com/api/chat.postMessage"
 
 def get_duty_pair() -> tuple[dict, dict]:
     """Returns (primary, secondary) dicts for the current week."""
-    members       = sorted(TEAM_MEMBERS, key=lambda m: m["name"].lower())
+    members       = TEAM_MEMBERS
     n             = len(members)
     today         = date.today()
     monday        = today - timedelta(days=today.weekday())
