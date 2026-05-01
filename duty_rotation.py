@@ -93,7 +93,7 @@ def build_main_blocks(primary: dict, secondary: dict, date_str: str) -> list[dic
             "type": "context",
             "elements": [{
                 "type": "mrkdwn",
-                "text": f"_Rotation resets every Monday · {len(TEAM_MEMBERS)} team members_",
+                "text": f"_Weekly duty · Rotation resets every Monday_",
             }],
         },
     ]
@@ -101,14 +101,14 @@ def build_main_blocks(primary: dict, secondary: dict, date_str: str) -> list[dic
 
 def build_checklist_blocks():
     checklist_lines = "\n".join(
-        f"  ☐ {desc}" for _, desc in CHECKLIST
+        f"• {desc}" for _, desc in CHECKLIST
     )
     return [
         {
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": f"*Today's checklist:*\n{checklist_lines}",
+                "text": checklist_lines,
             },
         },
     ]
