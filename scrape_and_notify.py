@@ -120,9 +120,10 @@ def get_post_created_time(url: str) -> datetime | None:
     Fetch the individual post page and extract the ORIGINAL post creation date.
     The page contains strings like 'Forum|Forum|5 months ago' or '2 hours ago'.
     We take the FIRST match — that is always the original post date, not a reply.
+    Uses a short timeout to avoid hanging on slow network connections.
     """
     try:
-        resp = requests.get(url, headers=HEADERS, timeout=20)
+        resp = requests.get(url, headers=HEADERS, timeout=8)
         resp.raise_for_status()
         soup = BeautifulSoup(resp.text, "html.parser")
         for tag in soup.find_all(string=re.compile(r'\b(ago|just now)\b', re.I)):
@@ -131,8 +132,10 @@ def get_post_created_time(url: str) -> datetime | None:
                 dt = parse_relative_time(text)
                 if dt:
                     return dt
+    except requests.exceptions.Timeout:
+        log.warning("Timeout — skipping: %s", url[-70:])
     except Exception as exc:
-        log.warning("Could not fetch post date for %s: %s", url, exc)
+        log.warning("Error (%s) — skipping: %s", type(exc).__name__, url[-70:])
     return None
 
 
@@ -156,7 +159,6 @@ def scrape_listing(url: str, post_type: str, seen: set) -> list[dict]:
 
         if full_url not in topic_map:
             topic_map[full_url] = {"title": "", "url": full_url}
-        # Longest anchor text = the title (others are reply counts, timestamps)
         if len(text) > len(topic_map[full_url]["title"]):
             topic_map[full_url]["title"] = text
 
@@ -190,17 +192,14 @@ def fetch_posts(hours_back: int = 24) -> list[dict]:
     for url, post_type in CATEGORY_URLS:
         candidates.extend(scrape_listing(url, post_type, seen))
 
-    log.info("Verifying post dates for %d candidates (this takes ~%ds)...",
-             len(candidates), len(candidates))
+    log.info("Verifying post dates for %d candidates...", len(candidates))
 
     recent = []
     for post in candidates:
         dt = get_post_created_time(post["url"])
         if dt is None:
-            log.debug("Skipping (no date): %s", post["title"][:60])
             continue
         if dt < cutoff:
-            log.debug("Too old (%s): %s", dt.strftime("%b %d"), post["title"][:60])
             continue
         post["posted_at"] = dt.strftime("%b %d, %H:%M UTC")
         recent.append(post)
@@ -259,28 +258,22 @@ def build_slack_blocks(issues: list[dict], total: int, date_str: str) -> list[di
         {"type": "divider"},
     ]
 
-    if not issues:
-        blocks.append({
-            "type": "section",
-            "text": {"type": "mrkdwn", "text": "✅ No new customer issues posted today."},
-        })
-    else:
-        for sev in ["🔴 High", "🟡 Medium", "🟢 Low"]:
-            for issue in [i for i in issues if i["severity"] == sev]:
-                title = issue["title"][:150]
-                title = title.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-                blocks.append({
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": (
-                            f"{issue['category']}  {issue['severity']}  {issue['post_type']}\n"
-                            f"*<{issue['url']}|{title}>*\n"
-                            f"_🕐 {issue['posted_at']}_"
-                        ),
-                    },
-                })
-                blocks.append({"type": "divider"})
+    for sev in ["🔴 High", "🟡 Medium", "🟢 Low"]:
+        for issue in [i for i in issues if i["severity"] == sev]:
+            title = issue["title"][:150]
+            title = title.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+            blocks.append({
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": (
+                        f"{issue['category']}  {issue['severity']}  {issue['post_type']}\n"
+                        f"*<{issue['url']}|{title}>*\n"
+                        f"_🕐 {issue['posted_at']}_"
+                    ),
+                },
+            })
+            blocks.append({"type": "divider"})
 
     blocks.append({
         "type": "context",
@@ -295,7 +288,6 @@ def post_to_slack(blocks: list[dict], fallback: str) -> None:
     if not token or not channel:
         raise EnvironmentError("SLACK_BOT_TOKEN and SLACK_CHANNEL_ID must be set.")
 
-    # Slack hard limit: 50 blocks per message — send in chunks of 45
     CHUNK_SIZE = 45
     chunks     = [blocks[i:i + CHUNK_SIZE] for i in range(0, len(blocks), CHUNK_SIZE)]
     log.info("Posting %d blocks in %d message(s)", len(blocks), len(chunks))
@@ -336,6 +328,11 @@ def main():
 
     issues.sort(key=lambda x: {"🔴 High": 0, "🟡 Medium": 1, "🟢 Low": 2}.get(x["severity"], 3))
     log.info("Flagged %d issues", len(issues))
+
+    # Skip Slack notification if nothing to report
+    if not issues:
+        log.info("No issues today — skipping Slack notification.")
+        return
 
     blocks   = build_slack_blocks(issues, len(posts), date_str)
     fallback = f"Adobe Audition Forum {date_str}: {len(issues)} new issue(s) in last 24h."

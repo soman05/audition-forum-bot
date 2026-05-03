@@ -45,7 +45,7 @@ TEAM_MEMBERS = [
 CHECKLIST = [
     ("Au Monitoring Dashboard", "<https://auditiondva.ci.corp.adobe.com/view/au-monitoring/|AU Monitoring Dashboard> — Check that all jobs are green (ignore Mac IBS that's diabled). Note: These are the Audition IBS and codex build validation jobs responsible for posting beta builds to CCD"),
     ("Node Status", "<https://auditiondva.ci.corp.adobe.com/computer/|Node Status> — Check the node status page — report any offline nodes"),
-    ("Daily Beta Build Tests", "<https://auditiondva.ci.corp.adobe.com/job/Audition/view/%20test-main/|Daily Beta Build Testss> — Check status of all the jobs, job runs should be finished by morning — report any stuck, failing jobs"),
+    ("Daily Beta Build Tests", "<https://auditiondva.ci.corp.adobe.com/job/Audition/view/%20test-main/|Daily Beta Build Testss> — Check status of all the jobs, job runs should be finished by morning — report any stuck, failing jobs with error log/message (open the failed job -> Console Output in left navigation pane -> look for error log towards the end)"),
 ]
 
 # Fixed reference Monday — rotation is calculated from this point.
