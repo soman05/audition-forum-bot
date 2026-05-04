@@ -7,7 +7,7 @@ on:
     #   8 AM IST  ->  '30 2  * * 1-5'
     #   8 AM CET  ->  '0 7  * * 1-5'
     #   8 AM UTC  ->  '0 8  * * 1-5'
-    - cron: '0 8 * * 1-5'
+    - cron: '30 2 * * 1-5'
 
   workflow_dispatch:  # allows manual trigger from GitHub UI
 
