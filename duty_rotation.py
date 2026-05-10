@@ -49,7 +49,7 @@ CHECKLIST = [
 ]
 
 # Fixed reference Monday — rotation is calculated from this point.
-ROTATION_START = date(2026, 5, 4)
+ROTATION_START = date(2026, 5, 11)
 
 SLACK_API_URL = "https://slack.com/api/chat.postMessage"
 
