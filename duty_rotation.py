@@ -37,9 +37,8 @@ TEAM_MEMBERS = [
     {"name": "Nikhil Khurana",  "slack_id": "U040TJVLKPF"},
     {"name": "Harshvardhan Bobbili",  "slack_id": "U071KGE1KS8"},
     {"name": "Abhishek Sharma",  "slack_id": "W4WBU0NLA"},
-    {"name": "Abhishek Kapoor",  "slack_id": "W4W9Y4867"},
     {"name": "Anil Berry",  "slack_id": "W4W9WCMKM"},
-    {"name": "Sankar Dey Sarkar",  "slack_id": "W4W9X4KHR"},
+    {"name": "Abhishek Kapoor",  "slack_id": "W4W9Y4867"},
 ]
 
 CHECKLIST = [
